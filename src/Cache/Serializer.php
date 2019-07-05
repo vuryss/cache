@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Vuryss\Cache;
 
 class Serializer
@@ -37,14 +39,6 @@ class Serializer
     {
         if (!in_array($method, [self::METHOD_NATIVE, self::METHOD_IGBINARY, self::METHOD_JSON])) {
             throw new Exception('Invalid serialization method!');
-        }
-
-        if ($method === self::METHOD_IGBINARY && !function_exists('igbinary_serialize')) {
-            throw new Exception('IGBinary PHP Extension not loaded, cannot use IGBinary serializer!');
-        }
-
-        if ($method === self::METHOD_JSON && !function_exists('json_encode')) {
-            throw new Exception('JSON PHP Extension not loaded, cannot use JSON serializer!');
         }
 
         $this->method = $method;

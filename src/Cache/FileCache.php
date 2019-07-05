@@ -310,7 +310,7 @@ class FileCache extends Cache implements CacheInterface
      */
     private function getData(): array
     {
-        if ($this->lastModificationTime < filemtime($this->filename) || empty($this->data)) {
+        if ($this->lastModificationTime <= filemtime($this->filename) || empty($this->data)) {
             $fileContent = file_get_contents($this->filename);
 
             if (empty($fileContent)) {
