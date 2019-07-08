@@ -49,17 +49,7 @@ class FileCache extends Cache implements CacheInterface
         $this->lastModificationTime = filemtime($this->filename);
 
         // Load serializer
-        $serializeMethods = [Serializer::METHOD_NATIVE, Serializer::METHOD_IGBINARY, Serializer::METHOD_JSON];
-
-        if ($serializeMethod) {
-            if (!in_array($serializeMethod, $serializeMethods)) {
-                throw new Exception('Invalid serialization method!');
-            }
-
-            $this->serializeMethod = $serializeMethod;
-        }
-
-        $this->serializer = new Serializer($this->serializeMethod);
+        $this->loadSerializer($serializeMethod);
     }
 
     /**
@@ -185,9 +175,7 @@ class FileCache extends Cache implements CacheInterface
         foreach ($keys as $key) {
             $this->validateKey($key);
 
-            if (!isset($data[$key])) {
-                $result[$key] = $default;
-            } elseif ($data[$key]['ttl'] === 0 || $data[$key]['ttl'] >= time()) {
+            if (isset($data[$key]) && ($data[$key]['ttl'] === 0 || $data[$key]['ttl'] >= time())) {
                 $result[$key] = $data[$key]['value'];
             } else {
                 $result[$key] = $default;
@@ -335,5 +323,27 @@ class FileCache extends Cache implements CacheInterface
     {
         $data = $this->serializer->serialize($data);
         return file_put_contents($this->filename, $data, LOCK_EX) !== false;
+    }
+
+    /**
+     * Loads the serializer
+     *
+     * @throws Exception
+     *
+     * @param string $serializeMethod
+     */
+    private function loadSerializer(string $serializeMethod = null)
+    {
+        $serializeMethods = [Serializer::METHOD_NATIVE, Serializer::METHOD_IGBINARY, Serializer::METHOD_JSON];
+
+        if ($serializeMethod) {
+            if (!in_array($serializeMethod, $serializeMethods)) {
+                throw new Exception('Invalid serialization method!');
+            }
+
+            $this->serializeMethod = $serializeMethod;
+        }
+
+        $this->serializer = new Serializer($this->serializeMethod);
     }
 }
