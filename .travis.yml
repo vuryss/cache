@@ -6,3 +6,6 @@ install:
 
 before_script:
   - pecl install igbinary
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
