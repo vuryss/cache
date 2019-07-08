@@ -9,6 +9,9 @@ use DateTime;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
 
+/**
+ * Provides simple PSR-16 cache by using local filesystem.
+ */
 class FileCache extends Cache implements CacheInterface
 {
     /**
@@ -18,8 +21,12 @@ class FileCache extends Cache implements CacheInterface
      */
     private $filename;
 
-
-    private $lastModificationTime;
+    /**
+     * Timestamp when the cache file has been modified for the last time.
+     *
+     * @var integer
+     */
+    private $lastModificationTime = 0;
 
     /**
      * @var array
@@ -31,12 +38,12 @@ class FileCache extends Cache implements CacheInterface
      *
      * @throws Exception
      *
-     * @param string      $filename
-     * @param string|null $serializeMethod
+     * @param string      $filename        Absolute file path to the cache file to use.
+     * @param string|null $serializeMethod Which cache method to use, refer to constants in Serializer class.
      */
     public function __construct(string $filename, string $serializeMethod = null)
     {
-        // Check the cache file, creating it if needed
+        // Check the cache file, creating it if needed.
         if (!file_exists($filename)) {
             if (!touch($filename)) {
                 throw new Exception('Cannot create or use the cache file: ' . $filename);
@@ -45,10 +52,10 @@ class FileCache extends Cache implements CacheInterface
             throw new Exception('Cache files is not writable: ' . $filename);
         }
 
-        $this->filename = $filename;
+        $this->filename             = $filename;
         $this->lastModificationTime = filemtime($this->filename);
 
-        // Load serializer
+        // Load serializer.
         $this->loadSerializer($serializeMethod);
     }
 
@@ -57,12 +64,10 @@ class FileCache extends Cache implements CacheInterface
      *
      * @throws InvalidArgumentException - thrown if the $key string is not a legal value.
      *
+     * @param string $key     The unique key of this item in the cache.
      * @param mixed  $default Default value to return if the key does not exist.
      *
-     * @param string $key     The unique key of this item in the cache.
-     *
      * @return mixed The value of the item from the cache, or $default in case of cache miss.
-     *
      */
     public function get($key, $default = null)
     {
@@ -86,15 +91,13 @@ class FileCache extends Cache implements CacheInterface
      *
      * @throws InvalidArgumentException - thrown if the $key string is not a legal value.
      *
-     * @param mixed                 $value  The value of the item to store, must be serializable.
-     * @param null|int|DateInterval $ttl    Optional. The TTL value of this item. If no value is sent and
-     *                                      the driver supports TTL then the library may set a default value
-     *                                      for it or let the driver take care of that.
+     * @param string                    $key   The key of the item to store.
+     * @param mixed                     $value The value of the item to store, must be serializable.
+     * @param null|integer|DateInterval $ttl   Optional. The TTL value of this item. If no value is sent and
+     *                                         the driver supports TTL then the library may set a default value
+     *                                         for it or let the driver take care of that.
      *
-     * @param string                $key    The key of the item to store.
-     *
-     * @return bool True on success and false on failure.
-     *
+     * @return boolean True on success and false on failure.
      */
     public function set($key, $value, $ttl = null)
     {
@@ -106,9 +109,9 @@ class FileCache extends Cache implements CacheInterface
             $ttl = is_int($ttl) ? time() + $ttl : 0;
         }
 
-        $data = $this->getData();
+        $data       = $this->getData();
         $data[$key] = [
-            'ttl' => $ttl,
+            'ttl'   => $ttl,
             'value' => $value,
         ];
 
@@ -122,8 +125,7 @@ class FileCache extends Cache implements CacheInterface
      *
      * @param string $key The unique cache key of the item to delete.
      *
-     * @return bool True if the item was successfully removed. False if there was an error.
-     *
+     * @return boolean True if the item was successfully removed. False if there was an error.
      */
     public function delete($key)
     {
@@ -141,7 +143,7 @@ class FileCache extends Cache implements CacheInterface
     /**
      * Wipes clean the entire cache's keys.
      *
-     * @return bool True on success and false on failure.
+     * @return boolean True on success and false on failure.
      */
     public function clear()
     {
@@ -155,9 +157,8 @@ class FileCache extends Cache implements CacheInterface
      *   thrown if $keys is neither an array nor a Traversable,
      *   or if any of the $keys are not a legal value.
      *
-     * @param mixed    $default Default value to return for keys that do not exist.
-     *
      * @param iterable $keys    A list of keys that can obtained in a single operation.
+     * @param mixed    $default Default value to return for keys that do not exist.
      *
      * @return iterable A list of key => value pairs.
      *         Cache keys that do not exist or are stale will have $default as value.
@@ -192,14 +193,12 @@ class FileCache extends Cache implements CacheInterface
      *   thrown if $values is neither an array nor a Traversable,
      *   or if any of the $values are not a legal value.
      *
-     * @param null|int|DateInterval $ttl     Optional. The TTL value of this item. If no value is sent and
-     *                                       the driver supports TTL then the library may set a default value
-     *                                       for it or let the driver take care of that.
+     * @param iterable                  $values A list of key => value pairs for a multiple-set operation.
+     * @param null|integer|DateInterval $ttl    Optional. The TTL value of this item. If no value is sent and
+     *                                          the driver supports TTL then the library may set a default value
+     *                                          for it or let the driver take care of that.
      *
-     * @param iterable              $values  A list of key => value pairs for a multiple-set operation.
-     *
-     * @return bool True on success and false on failure.
-     *
+     * @return boolean True on success and false on failure.
      */
     public function setMultiple($values, $ttl = null)
     {
@@ -219,7 +218,7 @@ class FileCache extends Cache implements CacheInterface
             $this->validateKey($key);
 
             $data[$key] = [
-                'ttl' => $ttl,
+                'ttl'   => $ttl,
                 'value' => $value,
             ];
         }
@@ -236,8 +235,7 @@ class FileCache extends Cache implements CacheInterface
      *
      * @param iterable $keys A list of string-based keys to be deleted.
      *
-     * @return bool True if the items were successfully removed. False if there was an error.
-     *
+     * @return boolean True if the items were successfully removed. False if there was an error.
      */
     public function deleteMultiple($keys)
     {
@@ -270,7 +268,7 @@ class FileCache extends Cache implements CacheInterface
      *
      * @param string $key The cache item key.
      *
-     * @return bool
+     * @return boolean
      */
     public function has($key)
     {
@@ -304,7 +302,7 @@ class FileCache extends Cache implements CacheInterface
             if (empty($fileContent)) {
                 $this->data = [];
             } else {
-                $data = $this->serializer->deserialize($fileContent);
+                $data       = $this->serializer->deserialize($fileContent);
                 $this->data = empty($data) ? [] : $data;
             }
         }
@@ -315,9 +313,9 @@ class FileCache extends Cache implements CacheInterface
     /**
      * Saves data to the file
      *
-     * @param array $data
+     * @param array $data Data to be saved in the cache file.
      *
-     * @return bool
+     * @return boolean
      */
     private function saveData(array $data): bool
     {
@@ -330,7 +328,9 @@ class FileCache extends Cache implements CacheInterface
      *
      * @throws Exception
      *
-     * @param string $serializeMethod
+     * @param string $serializeMethod Serialize method to use, refer to Serializer class constants.
+     *
+     * @return void
      */
     private function loadSerializer(string $serializeMethod = null)
     {

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Vuryss\Cache;
 
+/**
+ * Class Cache
+ */
 class Cache
 {
     /**
@@ -14,6 +17,8 @@ class Cache
     protected $serializeMethod = Serializer::METHOD_NATIVE;
 
     /**
+     * Class which will provide methods for serialization.
+     *
      * @var Serializer
      */
     protected $serializer;
@@ -23,7 +28,9 @@ class Cache
      *
      * @throws Exception
      *
-     * @param string $key
+     * @param mixed $key Cache key to validate.
+     *
+     * @return void
      */
     protected function validateKey($key)
     {
