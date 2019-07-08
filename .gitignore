@@ -1,2 +1,4 @@
 /vendor
 /.idea
+/tests/_data
+!/tests/_data/.gitkeep
