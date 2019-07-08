@@ -5,4 +5,4 @@ install:
   - composer install
 
 before_script:
-  - sudo pecl install igbinary
+  - pecl install igbinary
