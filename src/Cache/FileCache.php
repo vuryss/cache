@@ -45,7 +45,7 @@ class FileCache extends Cache implements CacheInterface
     {
         // Check the cache file, creating it if needed.
         if (!file_exists($filename)) {
-            if (!touch($filename)) {
+            if (!@touch($filename)) {
                 throw new Exception('Cannot create or use the cache file: ' . $filename);
             }
         }

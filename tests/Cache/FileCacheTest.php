@@ -41,8 +41,17 @@ class FileCacheTest extends TestCase
         new FileCache(TEST_DATA_DIR . '/cache-file');
     }
 
+    public function testUnwritable2File()
+    {
+        @unlink(TEST_DATA_DIR . '/cache-file');
+        chmod(TEST_DATA_DIR, 0500);
+        $this->expectException(Exception::class);
+        new FileCache(TEST_DATA_DIR . '/cache-file');
+    }
+
     public function testInvalidSerializer()
     {
+        chmod(TEST_DATA_DIR, 0777);
         @unlink(TEST_DATA_DIR . '/cache-file');
         $this->expectException(Exception::class);
         new FileCache(TEST_DATA_DIR . '/cache-file', 'invalid');
