@@ -48,7 +48,9 @@ class FileCache extends Cache implements CacheInterface
             if (!touch($filename)) {
                 throw new Exception('Cannot create or use the cache file: ' . $filename);
             }
-        } elseif (!is_writable($filename)) {
+        }
+
+        if (!is_writable($filename)) {
             throw new Exception('Cache files is not writable: ' . $filename);
         }
 
@@ -105,13 +107,11 @@ class FileCache extends Cache implements CacheInterface
 
         if ($ttl instanceof DateInterval) {
             $ttl = (new DateTime())->add($ttl)->getTimestamp();
-        } else {
-            $ttl = is_int($ttl) ? time() + $ttl : 0;
         }
 
         $data       = $this->getData();
         $data[$key] = [
-            'ttl'   => $ttl,
+            'ttl'   => is_int($ttl) ? time() + $ttl : 0,
             'value' => $value,
         ];
 
@@ -211,15 +211,13 @@ class FileCache extends Cache implements CacheInterface
 
         if ($ttl instanceof DateInterval) {
             $ttl = (new DateTime())->add($ttl)->getTimestamp();
-        } else {
-            $ttl = is_int($ttl) ? time() + $ttl : 0;
         }
 
         foreach ($values as $key => $value) {
             $this->validateKey($key);
 
             $data[$key] = [
-                'ttl'   => $ttl,
+                'ttl'   => is_int($ttl) ? time() + $ttl : 0,
                 'value' => $value,
             ];
         }
