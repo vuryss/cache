@@ -16,7 +16,8 @@
     },
     "suggest": {
         "ext-igbinary": "Allows using of igbinary library for serialization",
-        "ext-json": "Allows using of json library for serialization"
+        "ext-json": "Allows using of json library for serialization",
+        "ext-redis": "Allows using of Redis cache."
     },
     "autoload": {
         "psr-4": {

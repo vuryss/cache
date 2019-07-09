@@ -6,6 +6,7 @@
     <description>The coding standard for current library.</description>
 
     <file>./src</file>
+    <exclude-pattern>*/tests/*</exclude-pattern>
 
     <arg name="basepath" value="."/>
 
@@ -24,6 +25,7 @@
         <exclude name="Generic.Commenting.DocComment.ContentBeforeClose" />
         <exclude name="Generic.PHP.NoSilencedErrors.Discouraged" />
         <exclude name="Generic.PHP.UpperCaseConstant.Found" />
+        <exclude name="Generic.Functions.OpeningFunctionBraceBsdAllman.BraceOnSameLine" />
     </rule>
 
     <rule ref="PEAR">
@@ -62,6 +64,9 @@
         <exclude name="Squiz.Commenting.FunctionComment.TypeHintMissing" />
         <exclude name="Squiz.Arrays.ArrayDeclaration.SingleLineNotAllowed" />
         <exclude name="Squiz.PHP.DisallowComparisonAssignment.AssignedComparison" />
+        <exclude name="Squiz.Commenting.BlockComment.WrongStart" />
+        <exclude name="Squiz.Commenting.InlineComment.DocBlock" />
+        <exclude name="Squiz.PHP.DisallowBooleanStatement.Found" />
     </rule>
 
     <rule ref="PSR2">

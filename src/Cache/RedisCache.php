@@ -1,5 +1,8 @@
 <?php
 
+/** @noinspection PhpComposerExtensionStubsInspection */
+/** @noinspection PhpRedundantCatchClauseInspection */
+
 declare(strict_types=1);
 
 namespace Vuryss\Cache;
@@ -8,55 +11,63 @@ use DateInterval;
 use DateTime;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
+use Redis;
+use RedisException;
 
 /**
- * Provides simple PSR-16 cache by using local filesystem.
+ * Provides simple PSR-16 cache by using a redis server.
+ * It uses the redis PHP Extension.
  */
-class FileCache extends Cache implements CacheInterface
+class RedisCache extends Cache implements CacheInterface
 {
     /**
-     * Location of the cache file.
+     * Redis client, class from the PHP Extension
      *
-     * @var string
+     * @var Redis
      */
-    private $filename;
+    private $redisClient;
 
     /**
-     * Timestamp when the cache file has been modified for the last time.
+     * RedisCache constructor.
      *
-     * @var integer
+     * @throws Exception When connection to Redis server cannot be established.
+     *
+     * @param string|null  $hostname        Hostname of the Redis server.
+     * @param integer|null $port            Port number.
+     * @param float|null   $timeout         Timeout in seconds after which it will stop trying to connect.
+     * @param string|null  $serializeMethod Serialization method for the saved data. One of Serializer's constants.
+     * @param mixed|null   $redisClient     Custom redis instance, for mocking or decorating original one.
      */
-    private $lastModificationTime = 0;
+    public function __construct(
+        ?string $hostname = null,
+        ?int $port = null,
+        ?float $timeout = null,
+        ?string $serializeMethod = null,
+        $redisClient = null
+    ) {
+        $hostname          = $hostname ?? '127.0.0.1';
+        $port              = $port ?? 6379;
+        $timeout           = $timeout ?? 3.0;
+        $this->redisClient = $redisClient ?? new Redis();
+        $this->loadSerializer($serializeMethod);
 
-    /**
-     * @var array
-     */
-    private $data = [];
-
-    /**
-     * FileCache constructor.
-     *
-     * @throws Exception
-     *
-     * @param string      $filename        Absolute file path to the cache file to use.
-     * @param string|null $serializeMethod Which cache method to use, refer to constants in Serializer class.
-     */
-    public function __construct(string $filename, string $serializeMethod = null)
-    {
-        // Check the cache file, creating it if needed.
-        if (!file_exists($filename)) {
-            if (!touch($filename)) {
-                throw new Exception('Cannot create or use the cache file: ' . $filename);
-            }
-        } elseif (!is_writable($filename)) {
-            throw new Exception('Cache files is not writable: ' . $filename);
+        try {
+            $isConnected = $redisClient->ping() === '+PONG';
+        } catch (RedisException $e) {
+            $isConnected = false;
         }
 
-        $this->filename             = $filename;
-        $this->lastModificationTime = filemtime($this->filename);
+        if (!$isConnected) {
+            try {
+                $isConnected = $this->redisClient->pconnect($hostname, $port, $timeout);
+            } catch (RedisException $e) {
+                throw new Exception('Could not connect to Redis server. Exception: ' . $e->getMessage());
+            }
+        }
 
-        // Load serializer.
-        $this->loadSerializer($serializeMethod);
+        if (!$isConnected) {
+            throw new Exception('Could not connect to Redis server.');
+        }
     }
 
     /**
@@ -73,17 +84,13 @@ class FileCache extends Cache implements CacheInterface
     {
         $this->validateKey($key);
 
-        $data = $this->getData()[$key] ?? null;
+        $data = $this->redisClient->get($key);
 
-        if (!$data) {
+        if ($data === false) {
             return $default;
         }
 
-        if ($data['ttl'] === 0 || $data['ttl'] >= time()) {
-            return $data['value'];
-        }
-
-        return $default;
+        return $this->serializer->deserialize($data);
     }
 
     /**
@@ -104,18 +111,14 @@ class FileCache extends Cache implements CacheInterface
         $this->validateKey($key);
 
         if ($ttl instanceof DateInterval) {
-            $ttl = (new DateTime())->add($ttl)->getTimestamp();
-        } else {
-            $ttl = is_int($ttl) ? time() + $ttl : 0;
+            $ttl = (new DateTime())->add($ttl)->getTimestamp() - time();
         }
 
-        $data       = $this->getData();
-        $data[$key] = [
-            'ttl'   => $ttl,
-            'value' => $value,
-        ];
+        if (is_int($ttl) && $ttl >= 0) {
+            return $this->redisClient->setex($key, $ttl, $this->serializer->serialize($value)) === true;
+        }
 
-        return $this->saveData($data);
+        return $this->redisClient->set($key, $this->serializer->serialize($value)) === true;
     }
 
     /**
@@ -131,13 +134,9 @@ class FileCache extends Cache implements CacheInterface
     {
         $this->validateKey($key);
 
-        $data = $this->getData();
+        $result = $this->redisClient->del($key);
 
-        if (isset($data[$key])) {
-            unset($data[$key]);
-        }
-
-        return $this->saveData($data);
+        return is_int($result) && $result >= 0;
     }
 
     /**
@@ -147,7 +146,7 @@ class FileCache extends Cache implements CacheInterface
      */
     public function clear()
     {
-        return $this->saveData([]);
+        return $this->redisClient->flushDB();
     }
 
     /**
@@ -169,22 +168,27 @@ class FileCache extends Cache implements CacheInterface
             throw new Exception('Keys is neither an array nor a Traversable');
         }
 
-        $data = $this->getData();
-
-        $result = [];
+        $validKeys = [];
 
         foreach ($keys as $key) {
             $this->validateKey($key);
+            $validKeys[] = $key;
+        }
 
-            if (isset($data[$key]) && ($data[$key]['ttl'] === 0 || $data[$key]['ttl'] >= time())) {
-                $result[$key] = $data[$key]['value'];
+        $results = $this->redisClient->mget($validKeys);
+
+        foreach ($results as $index => $result) {
+            unset($results[$index]);
+
+            if ($result === false) {
+                $results[$validKeys[$index]] = $default;
                 continue;
             }
 
-            $result[$key] = $default;
+            $results[$validKeys[$index]] = $this->serializer->deserialize($result);
         }
 
-        return $result;
+        return $results;
     }
 
     /**
@@ -207,24 +211,32 @@ class FileCache extends Cache implements CacheInterface
             throw new Exception('Data is neither an array nor a Traversable');
         }
 
-        $data = $this->getData();
-
         if ($ttl instanceof DateInterval) {
-            $ttl = (new DateTime())->add($ttl)->getTimestamp();
-        } else {
-            $ttl = is_int($ttl) ? time() + $ttl : 0;
+            $ttl = (new DateTime())->add($ttl)->getTimestamp() - time();
         }
+
+        $arrayValues = [];
 
         foreach ($values as $key => $value) {
             $this->validateKey($key);
-
-            $data[$key] = [
-                'ttl'   => $ttl,
-                'value' => $value,
-            ];
+            $arrayValues[$key] = $this->serializer->serialize($value);
         }
 
-        return $this->saveData($data);
+        if (!$this->redisClient->mset($arrayValues)) {
+            return false;
+        }
+
+        if (is_int($ttl) && $ttl >= 0) {
+            $result = 1;
+
+            foreach ($arrayValues as $key => $value) {
+                $result &= $this->redisClient->expire($key, $ttl) === true;
+            }
+
+            return $result === 1;
+        }
+
+        return true;
     }
 
     /**
@@ -240,21 +252,15 @@ class FileCache extends Cache implements CacheInterface
      */
     public function deleteMultiple($keys)
     {
-        $data = $this->getData();
-
         if (!is_iterable($keys)) {
             throw new Exception('Keys is neither an array nor a Traversable');
         }
 
         foreach ($keys as $key) {
             $this->validateKey($key);
-
-            if (isset($data[$key])) {
-                unset($data[$key]);
-            }
         }
 
-        return $this->saveData($data);
+        return $this->redisClient->del(...$keys);
     }
 
     /**
@@ -275,52 +281,6 @@ class FileCache extends Cache implements CacheInterface
     {
         $this->validateKey($key);
 
-        $data = $this->getData()[$key] ?? null;
-
-        if (!$data) {
-            return false;
-        }
-
-        if ($data['ttl'] === 0 || $data['ttl'] >= time()) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Retrieves data from the cache file.
-     *
-     * @throws Exception
-     *
-     * @return array
-     */
-    private function getData(): array
-    {
-        if ($this->lastModificationTime <= filemtime($this->filename) || empty($this->data)) {
-            $fileContent = file_get_contents($this->filename);
-
-            if (empty($fileContent)) {
-                $this->data = [];
-            } else {
-                $data       = $this->serializer->deserialize($fileContent);
-                $this->data = empty($data) ? [] : $data;
-            }
-        }
-
-        return $this->data;
-    }
-
-    /**
-     * Saves data to the file
-     *
-     * @param array $data Data to be saved in the cache file.
-     *
-     * @return boolean
-     */
-    private function saveData(array $data): bool
-    {
-        $data = $this->serializer->serialize($data);
-        return file_put_contents($this->filename, $data, LOCK_EX) !== false;
+        return $this->redisClient->exists($key) === 1;
     }
 }

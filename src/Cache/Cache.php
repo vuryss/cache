@@ -40,4 +40,28 @@ class Cache
             );
         }
     }
+
+    /**
+     * Loads the serializer
+     *
+     * @throws Exception
+     *
+     * @param string $serializeMethod Serialize method to use, refer to Serializer class constants.
+     *
+     * @return void
+     */
+    protected function loadSerializer(string $serializeMethod = null)
+    {
+        $serializeMethods = [Serializer::METHOD_NATIVE, Serializer::METHOD_IGBINARY, Serializer::METHOD_JSON];
+
+        if ($serializeMethod) {
+            if (!in_array($serializeMethod, $serializeMethods)) {
+                throw new Exception('Invalid serialization method!');
+            }
+
+            $this->serializeMethod = $serializeMethod;
+        }
+
+        $this->serializer = new Serializer($this->serializeMethod);
+    }
 }
