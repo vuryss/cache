@@ -297,15 +297,17 @@ class FileCache extends Cache implements CacheInterface
      */
     private function getData(): array
     {
-        if ($this->lastModificationTime <= filemtime($this->filename) || empty($this->data)) {
-            $fileContent = file_get_contents($this->filename);
+        if (!empty($this->data) && $this->lastModificationTime === filemtime($this->filename)) {
+            return $this->data;
+        }
 
-            if (empty($fileContent)) {
-                $this->data = [];
-            } else {
-                $data       = $this->serializer->deserialize($fileContent);
-                $this->data = empty($data) ? [] : $data;
-            }
+        $fileContent                = file_get_contents($this->filename);
+        $this->lastModificationTime = filemtime($this->filename);
+        $this->data                 = [];
+
+        if (!empty($fileContent)) {
+            $data       = $this->serializer->deserialize($fileContent);
+            $this->data = empty($data) ? [] : $data;
         }
 
         return $this->data;
@@ -321,6 +323,7 @@ class FileCache extends Cache implements CacheInterface
     private function saveData(array $data): bool
     {
         $data = $this->serializer->serialize($data);
+        $this->lastModificationTime = -1;
         return file_put_contents($this->filename, $data, LOCK_EX) !== false;
     }
 }
