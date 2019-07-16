@@ -52,7 +52,7 @@ class RedisCache extends Cache implements CacheInterface
         $this->loadSerializer($serializeMethod);
 
         try {
-            $isConnected = $redisClient->ping() === '+PONG';
+            $isConnected = $this->redisClient->ping() === '+PONG';
         } catch (RedisException $e) {
             $isConnected = false;
         }
