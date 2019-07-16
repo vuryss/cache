@@ -26,6 +26,8 @@
         <exclude name="Generic.PHP.NoSilencedErrors.Discouraged" />
         <exclude name="Generic.PHP.UpperCaseConstant.Found" />
         <exclude name="Generic.Functions.OpeningFunctionBraceBsdAllman.BraceOnSameLine" />
+        <exclude name="Generic.Formatting.NoSpaceAfterCast.SpaceFound" />
+        <exclude name="Generic.Formatting.SpaceBeforeCast.NoSpace" />
     </rule>
 
     <rule ref="PEAR">
@@ -67,6 +69,11 @@
         <exclude name="Squiz.Commenting.BlockComment.WrongStart" />
         <exclude name="Squiz.Commenting.InlineComment.DocBlock" />
         <exclude name="Squiz.PHP.DisallowBooleanStatement.Found" />
+        <exclude name="Squiz.Commenting.VariableComment.IncorrectVarType" />
+        <exclude name="Squiz.Commenting.FunctionComment.IncorrectParamVarName" />
+        <exclude name="Squiz.Commenting.FunctionComment.InvalidReturn" />
+        <exclude name="Squiz.WhiteSpace.FunctionSpacing.BeforeFirst" />
+        <exclude name="Squiz.Commenting.VariableComment.VarOrder" />
     </rule>
 
     <rule ref="PSR2">

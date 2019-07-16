@@ -12,5 +12,8 @@
 
 Very simple, compact and highly opinionated PSR-16 based caching library.
 
+## Based on standards
+[PSR-2](https://www.php-fig.org/psr/psr-2), [PSR-4](https://www.php-fig.org/psr/psr-4), [PSR-16](https://www.php-fig.org/psr/psr-16)
+
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)

@@ -104,7 +104,7 @@ class RedisCache extends Cache implements CacheInterface
      *                                         the driver supports TTL then the library may set a default value
      *                                         for it or let the driver take care of that.
      *
-     * @return boolean True on success and false on failure.
+     * @return bool True on success and false on failure.
      */
     public function set($key, $value, $ttl = null)
     {
@@ -128,7 +128,7 @@ class RedisCache extends Cache implements CacheInterface
      *
      * @param string $key The unique cache key of the item to delete.
      *
-     * @return boolean True if the item was successfully removed. False if there was an error.
+     * @return bool True if the item was successfully removed. False if there was an error.
      */
     public function delete($key)
     {
@@ -142,7 +142,7 @@ class RedisCache extends Cache implements CacheInterface
     /**
      * Wipes clean the entire cache's keys.
      *
-     * @return boolean True on success and false on failure.
+     * @return bool True on success and false on failure.
      */
     public function clear()
     {
@@ -203,7 +203,7 @@ class RedisCache extends Cache implements CacheInterface
      *                                          the driver supports TTL then the library may set a default value
      *                                          for it or let the driver take care of that.
      *
-     * @return boolean True on success and false on failure.
+     * @return bool True on success and false on failure.
      */
     public function setMultiple($values, $ttl = null)
     {
@@ -248,7 +248,7 @@ class RedisCache extends Cache implements CacheInterface
      *
      * @param iterable $keys A list of string-based keys to be deleted.
      *
-     * @return boolean True if the items were successfully removed. False if there was an error.
+     * @return bool True if the items were successfully removed. False if there was an error.
      */
     public function deleteMultiple($keys)
     {
@@ -275,7 +275,7 @@ class RedisCache extends Cache implements CacheInterface
      *
      * @param string $key The cache item key.
      *
-     * @return boolean
+     * @return bool
      */
     public function has($key)
     {
