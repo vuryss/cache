@@ -2,4 +2,4 @@
 exclude_paths:
   - '**/tests/**'
   - 'tests/**'
-  - '.phar/**'
+  - '.phan/**'
