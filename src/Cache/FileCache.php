@@ -7,10 +7,11 @@ namespace Vuryss\Cache;
 use DateInterval;
 use DateTime;
 use Psr\SimpleCache\CacheInterface;
-use Psr\SimpleCache\InvalidArgumentException;
 
 /**
  * Provides simple PSR-16 cache by using local filesystem.
+ *
+ * @suppress PhanUnreferencedClass
  */
 class FileCache extends Cache implements CacheInterface
 {
@@ -55,7 +56,7 @@ class FileCache extends Cache implements CacheInterface
         }
 
         $this->filename             = $filename;
-        $this->lastModificationTime = filemtime($this->filename);
+        $this->lastModificationTime = filemtime($this->filename) ?: time();
 
         // Load serializer.
         $this->loadSerializer($serializeMethod);
@@ -64,7 +65,7 @@ class FileCache extends Cache implements CacheInterface
     /**
      * Fetches a value from the cache.
      *
-     * @throws InvalidArgumentException - thrown if the $key string is not a legal value.
+     * @throws Exception - thrown if the $key string is not a legal value.
      *
      * @param string $key     The unique key of this item in the cache.
      * @param mixed  $default Default value to return if the key does not exist.
@@ -91,7 +92,7 @@ class FileCache extends Cache implements CacheInterface
     /**
      * Persists data in the cache, uniquely referenced by a key with an optional expiration TTL time.
      *
-     * @throws InvalidArgumentException - thrown if the $key string is not a legal value.
+     * @throws Exception - thrown if the $key string is not a legal value.
      *
      * @param string                    $key   The key of the item to store.
      * @param mixed                     $value The value of the item to store, must be serializable.
@@ -121,7 +122,7 @@ class FileCache extends Cache implements CacheInterface
     /**
      * Delete an item from the cache by its unique key.
      *
-     * @throws InvalidArgumentException - thrown if the $key string is not a legal value.
+     * @throws Exception - thrown if the $key string is not a legal value.
      *
      * @param string $key The unique cache key of the item to delete.
      *
@@ -143,6 +144,8 @@ class FileCache extends Cache implements CacheInterface
     /**
      * Wipes clean the entire cache's keys.
      *
+     * @throws Exception
+     *
      * @return bool True on success and false on failure.
      */
     public function clear()
@@ -153,7 +156,7 @@ class FileCache extends Cache implements CacheInterface
     /**
      * Obtains multiple cache items by their unique keys.
      *
-     * @throws InvalidArgumentException
+     * @throws Exception
      *   thrown if $keys is neither an array nor a Traversable,
      *   or if any of the $keys are not a legal value.
      *
@@ -190,7 +193,7 @@ class FileCache extends Cache implements CacheInterface
     /**
      * Persists a set of key => value pairs in the cache, with an optional TTL.
      *
-     * @throws InvalidArgumentException
+     * @throws Exception
      *   thrown if $values is neither an array nor a Traversable,
      *   or if any of the $values are not a legal value.
      *
@@ -228,7 +231,7 @@ class FileCache extends Cache implements CacheInterface
     /**
      * Deletes multiple cache items in a single operation.
      *
-     * @throws InvalidArgumentException
+     * @throws Exception
      *   thrown if $keys is neither an array nor a Traversable,
      *   or if any of the $keys are not a legal value.
      *
@@ -263,7 +266,7 @@ class FileCache extends Cache implements CacheInterface
      * is subject to a race condition where your has() will return true and immediately after,
      * another script can remove it making the state of your app out of date.
      *
-     * @throws InvalidArgumentException - thrown if the $key string is not a legal value.
+     * @throws Exception - thrown if the $key string is not a legal value.
      *
      * @param string $key The cache item key.
      *
@@ -300,7 +303,7 @@ class FileCache extends Cache implements CacheInterface
         }
 
         $fileContent                = file_get_contents($this->filename);
-        $this->lastModificationTime = filemtime($this->filename);
+        $this->lastModificationTime = filemtime($this->filename) ?: time();
         $this->data                 = [];
 
         if (!empty($fileContent)) {
@@ -313,6 +316,8 @@ class FileCache extends Cache implements CacheInterface
 
     /**
      * Saves data to the file
+     *
+     * @throws Exception
      *
      * @param array $data Data to be saved in the cache file.
      *

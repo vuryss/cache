@@ -46,7 +46,7 @@ abstract class Cache
      *
      * @throws Exception
      *
-     * @param string $serializeMethod Serialize method to use, refer to Serializer class constants.
+     * @param string|null $serializeMethod Serialize method to use, refer to Serializer class constants.
      *
      * @return void
      */
@@ -55,7 +55,7 @@ abstract class Cache
         $serializeMethods = [Serializer::METHOD_NATIVE, Serializer::METHOD_IGBINARY, Serializer::METHOD_JSON];
 
         if ($serializeMethod) {
-            if (!in_array($serializeMethod, $serializeMethods)) {
+            if (!in_array($serializeMethod, $serializeMethods, true)) {
                 throw new Exception('Invalid serialization method!');
             }
 

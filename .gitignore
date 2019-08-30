@@ -1,7 +1,8 @@
 /vendor
 /.idea
-/.phpunit.result.cache
 /clover.xml
 /code-coverage
 /tests/_data
 !/tests/_data/.gitkeep
+/.env
+/.phpunit.result.cache

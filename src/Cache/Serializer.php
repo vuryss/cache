@@ -44,7 +44,7 @@ class Serializer
      */
     public function __construct(string $method)
     {
-        if (!in_array($method, [self::METHOD_NATIVE, self::METHOD_IGBINARY, self::METHOD_JSON])) {
+        if (!in_array($method, [self::METHOD_NATIVE, self::METHOD_IGBINARY, self::METHOD_JSON], true)) {
             throw new Exception('Invalid serialization method!');
         }
 
@@ -54,6 +54,8 @@ class Serializer
     /**
      * Serializes the cache data.
      *
+     * @throws Exception
+     *
      * @param mixed $data Data to be serialized for caching purposes.
      *
      * @return string
@@ -62,13 +64,31 @@ class Serializer
     {
         switch ($this->method) {
             case self::METHOD_IGBINARY:
-                return igbinary_serialize($data);
+                $data = igbinary_serialize($data);
+
+                if ($data === false) {
+                    throw new Exception('Cannot serialize given data using igbinary!');
+                }
+
+                return $data;
 
             case self::METHOD_JSON:
-                return json_encode($data);
+                $data = json_encode($data);
+
+                if ($data === false) {
+                    throw new Exception('Cannot serialize given data json!');
+                }
+
+                return $data;
 
             default:
-                return serialize($data);
+                $data = serialize($data);
+
+                if ($data === false) {
+                    throw new Exception('Cannot serialize given data using native serialize!');
+                }
+
+                return $data;
         }
     }
 

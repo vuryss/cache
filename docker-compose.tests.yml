@@ -1,0 +1,11 @@
+version: '3.7'
+services:
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.tests
+      args:
+        USER_ID: ${USER_ID:-0}
+        GROUP_ID: ${GROUP_ID:-0}
+    volumes:
+      - ${PROJECT_DIR}:/app

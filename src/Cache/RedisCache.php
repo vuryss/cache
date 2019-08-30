@@ -10,13 +10,14 @@ namespace Vuryss\Cache;
 use DateInterval;
 use DateTime;
 use Psr\SimpleCache\CacheInterface;
-use Psr\SimpleCache\InvalidArgumentException;
 use Redis;
 use RedisException;
 
 /**
  * Provides simple PSR-16 cache by using a redis server.
  * It uses the redis PHP Extension.
+ *
+ * @suppress PhanUnreferencedClass
  */
 class RedisCache extends Cache implements CacheInterface
 {
@@ -73,7 +74,7 @@ class RedisCache extends Cache implements CacheInterface
     /**
      * Fetches a value from the cache.
      *
-     * @throws InvalidArgumentException - thrown if the $key string is not a legal value.
+     * @throws Exception - thrown if the $key string is not a legal value.
      *
      * @param string $key     The unique key of this item in the cache.
      * @param mixed  $default Default value to return if the key does not exist.
@@ -96,7 +97,7 @@ class RedisCache extends Cache implements CacheInterface
     /**
      * Persists data in the cache, uniquely referenced by a key with an optional expiration TTL time.
      *
-     * @throws InvalidArgumentException - thrown if the $key string is not a legal value.
+     * @throws Exception - thrown if the $key string is not a legal value.
      *
      * @param string                    $key   The key of the item to store.
      * @param mixed                     $value The value of the item to store, must be serializable.
@@ -124,7 +125,7 @@ class RedisCache extends Cache implements CacheInterface
     /**
      * Delete an item from the cache by its unique key.
      *
-     * @throws InvalidArgumentException - thrown if the $key string is not a legal value.
+     * @throws Exception - thrown if the $key string is not a legal value.
      *
      * @param string $key The unique cache key of the item to delete.
      *
@@ -152,7 +153,7 @@ class RedisCache extends Cache implements CacheInterface
     /**
      * Obtains multiple cache items by their unique keys.
      *
-     * @throws InvalidArgumentException
+     * @throws Exception
      *   thrown if $keys is neither an array nor a Traversable,
      *   or if any of the $keys are not a legal value.
      *
@@ -180,7 +181,7 @@ class RedisCache extends Cache implements CacheInterface
         foreach ($results as $index => $result) {
             unset($results[$index]);
 
-            if ($result === false) {
+            if (!is_string($result)) {
                 $results[$validKeys[$index]] = $default;
                 continue;
             }
@@ -194,7 +195,7 @@ class RedisCache extends Cache implements CacheInterface
     /**
      * Persists a set of key => value pairs in the cache, with an optional TTL.
      *
-     * @throws InvalidArgumentException
+     * @throws Exception
      *   thrown if $values is neither an array nor a Traversable,
      *   or if any of the $values are not a legal value.
      *
@@ -229,8 +230,8 @@ class RedisCache extends Cache implements CacheInterface
         if (is_int($ttl) && $ttl >= 0) {
             $result = 1;
 
-            foreach ($arrayValues as $key => $value) {
-                $result &= $this->redisClient->expire($key, $ttl) === true;
+            foreach (array_keys($arrayValues) as $key) {
+                $result &= $this->redisClient->expire((string) $key, $ttl) === true;
             }
 
             return $result === 1;
@@ -242,7 +243,7 @@ class RedisCache extends Cache implements CacheInterface
     /**
      * Deletes multiple cache items in a single operation.
      *
-     * @throws InvalidArgumentException
+     * @throws Exception
      *   thrown if $keys is neither an array nor a Traversable,
      *   or if any of the $keys are not a legal value.
      *
@@ -260,7 +261,7 @@ class RedisCache extends Cache implements CacheInterface
             $this->validateKey($key);
         }
 
-        return $this->redisClient->del(...$keys);
+        return (bool) $this->redisClient->del(...$keys);
     }
 
     /**
@@ -271,7 +272,7 @@ class RedisCache extends Cache implements CacheInterface
      * is subject to a race condition where your has() will return true and immediately after,
      * another script can remove it making the state of your app out of date.
      *
-     * @throws InvalidArgumentException - thrown if the $key string is not a legal value.
+     * @throws Exception - thrown if the $key string is not a legal value.
      *
      * @param string $key The cache item key.
      *

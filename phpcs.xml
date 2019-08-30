@@ -74,6 +74,7 @@
         <exclude name="Squiz.Commenting.FunctionComment.InvalidReturn" />
         <exclude name="Squiz.WhiteSpace.FunctionSpacing.BeforeFirst" />
         <exclude name="Squiz.Commenting.VariableComment.VarOrder" />
+        <exclude name="Squiz.Commenting.ClassComment.TagNotAllowed" />
     </rule>
 
     <rule ref="PSR2">
