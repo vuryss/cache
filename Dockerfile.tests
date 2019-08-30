@@ -14,11 +14,13 @@ RUN if [ ${USER_ID:-0} -ne 0 ] && [ ${GROUP_ID:-0} -ne 0 ]; then \
 RUN apt-get update \
     && pecl install igbinary \
     && pecl install ast \
+    && pecl install xdebug \
     && apt-get install -y git \
     && yes no | pecl install redis \
     && docker-php-ext-enable redis \
     && docker-php-ext-enable ast \
-    && docker-php-ext-enable igbinary
+    && docker-php-ext-enable igbinary \
+    && docker-php-ext-enable xdebug
 
 WORKDIR /home/user
 
@@ -28,6 +30,10 @@ RUN curl -OL https://github.com/phpmd/phpmd/releases/download/2.7.0/phpmd.phar
 RUN curl -OL https://github.com/phan/phan/releases/download/2.2.11/phan.phar
 
 RUN chown -R user:user /home/user
+
+# Configuration
+ENV PHAN_ALLOW_XDEBUG 1
+ENV PHAN_DISABLE_XDEBUG_WARN 1
 
 # Permissions
 RUN mkdir /app

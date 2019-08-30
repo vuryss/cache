@@ -64,31 +64,13 @@ class Serializer
     {
         switch ($this->method) {
             case self::METHOD_IGBINARY:
-                $data = igbinary_serialize($data);
-
-                if ($data === false) {
-                    throw new Exception('Cannot serialize given data using igbinary!');
-                }
-
-                return $data;
+                return igbinary_serialize($data) ?: '';
 
             case self::METHOD_JSON:
-                $data = json_encode($data);
-
-                if ($data === false) {
-                    throw new Exception('Cannot serialize given data json!');
-                }
-
-                return $data;
+                return json_encode($data) ?: '';
 
             default:
-                $data = serialize($data);
-
-                if ($data === false) {
-                    throw new Exception('Cannot serialize given data using native serialize!');
-                }
-
-                return $data;
+                return serialize($data) ?: '';
         }
     }
 
