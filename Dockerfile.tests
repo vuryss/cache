@@ -24,10 +24,11 @@ RUN apt-get update \
 
 WORKDIR /home/user
 
-# Add PHP Code Sniffer, PHP Mess Detector, Phan
+# Add PHP Code Sniffer, PHP Mess Detector, Phan, PHPStan
 RUN curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar
 RUN curl -OL https://github.com/phpmd/phpmd/releases/download/2.7.0/phpmd.phar
 RUN curl -OL https://github.com/phan/phan/releases/download/2.2.11/phan.phar
+RUN curl -OL https://github.com/phpstan/phpstan/releases/download/0.11.15/phpstan.phar
 
 RUN chown -R user:user /home/user
 
